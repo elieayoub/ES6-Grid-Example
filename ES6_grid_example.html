@@ -1,0 +1,180 @@
+<html>
+<head>
+	<title>ES6 Grid Example</title>
+	<style>
+		body {
+			font-family: Verdana, Arial, sans-serif;
+			font-size: 12px;
+			color: #000;
+		}
+		.grid {
+			display: table;
+			width: 100%;
+		}
+		.grid-row {
+			display: table-row;
+		}
+		.grid-cell {
+			display: table-cell;
+			padding: 5px;
+		}
+		.grid-header {
+			font-weight: bold;
+			background-color: #666;
+			color: #FFF;
+		}
+		.grid-body {
+			background-color: #CCC;
+		}
+		.grid-total {
+			background-color: #CCC;
+			font-weight: bold;
+		}
+		.grid-total > div {
+			background-color: #AAA;
+			border-top: 1px solid #666;
+		}
+	</style>
+</head>
+<body onload="gridExample.loadGrid()">
+	<p>
+		<button onclick="gridExample.resetGrid()">Reset Grid</button>
+	</p>
+	<p>
+		Transformations: 
+		<button onclick="gridExample.capitalizeGrid()">Capitalize Grid</button>
+	</p>
+	<p>
+		Filter by age: 
+		<select id="filterAgeOperation">
+			<option value=">">></option>
+			<option value=">=">>=</option>
+			<option value="<"><</option>
+			<option value="<="><=</option>
+			<option value="=">=</option>
+		</select>
+		<input type="number" id="filterAgeValue" />
+		<button onclick="gridExample.filterByAge()">Filter</button>
+	</p>
+	<p>
+		<button onclick="gridExample.getFirstTeenager()">Get First Teenager</button>
+		<button onclick="gridExample.isEveryoneTeenager()">Check everyone is Teenager</button>
+		<button onclick="gridExample.isSomeoneTeenager()">Check at least one is Teenager</button>
+	</p>
+	<div id="mainGrid" class="grid">
+	</div>
+	<div class="main-grid-total">
+		<label id="lblTotalAge" />
+	</div>
+	<script>
+		class Grid {
+			constructor(datasource) {
+				this._datasource = datasource,
+				this._filteredArray = datasource
+			}
+
+			capitalize({firstname, lastname, age}) {
+				return {firstname: firstname.toUpperCase(), lastname: lastname.toUpperCase(), age: age }
+			}
+			
+			filterByAge() {
+				var filterAgeValue = document.getElementById("filterAgeValue").value;
+				var filterAgeOperation = document.getElementById("filterAgeOperation").value;
+				if (filterAgeValue != null && parseInt(filterAgeValue) > 0)
+				{
+					switch(filterAgeOperation) {
+						case ">":
+							this._filteredArray = this._datasource.filter(function ({age}) { return age > parseInt(filterAgeValue) });
+							break;
+						case ">=":
+							this._filteredArray = this._datasource.filter(function ({age}) { return age >= parseInt(filterAgeValue) });
+							break;
+						case "<":
+							this._filteredArray = this._datasource.filter(function ({age}) { return age < parseInt(filterAgeValue) });
+							break;
+						case "<=":
+							this._filteredArray = this._datasource.filter(function ({age}) { return age <= parseInt(filterAgeValue) });
+							break;				
+						case "=":
+							this._filteredArray = this._datasource.filter(function ({age}) { return age == parseInt(filterAgeValue) });
+							break;						
+					}
+				}
+				this.loadGrid(this._filteredArray);
+			}
+			
+			checkTeenager({age}) {
+				// teenager is between 11 and 19 years old
+				return age > 10 && age < 20
+			}
+			
+			loadGrid(array = this._datasource) {
+				var gridContent = `<div class="grid-row grid-header">
+					<div class="grid-cell">Firstname</div>
+					<div class="grid-cell">Lastname</div>
+					<div class="grid-cell">Age</div>
+				</div>`;
+				
+				//Calculate total ages in array using ES6 Arrow Function
+				var sumValue = array.reduce((acc, {age}) => acc + age, 0);
+				
+				//Build Grid content from array using ES6 Template Strings
+				gridContent += array.map(person => `
+							<div class="grid-row grid-body">
+								<div class="grid-cell">${person.firstname}</div>
+								<div class="grid-cell">${person.lastname}</div>
+								<div class="grid-cell">${person.age}</div>
+							</div>`).join(' ');
+				gridContent += `
+							<div class="grid-row grid-total">
+								<div class="grid-cell"></div>
+								<div class="grid-cell"></div>
+								<div class="grid-cell">${sumValue}</div>
+							</div>`
+				document.getElementById("mainGrid").innerHTML = gridContent;
+			}
+
+			resetGrid() {
+				this._filteredArray = this._datasource; 
+				this.loadGrid(this._datasource);
+			}
+
+			getFirstTeenager() {
+				this._filteredArray = new Array(this._datasource.find(this.checkTeenager)); 
+				this.loadGrid(this._filteredArray)
+			}
+
+			isEveryoneTeenager() {
+				alert((this._datasource.every(this.checkTeenager)) ? 'Yes' : 'No')
+			}
+
+			isSomeoneTeenager() {
+				alert((this._datasource.some(this.checkTeenager)) ? 'Yes' : 'No')
+			}
+
+			capitalizeGrid () {
+				this.loadGrid(this._filteredArray.map(this.capitalize))
+			}
+		}
+
+		class GridExample extends Grid {
+			constructor() {
+				const persons = [
+					{firstname: "James", lastname: "Mitchell", age: 14 },
+					{firstname: "Kristopher", lastname: "Gregory", age: 12 },
+					{firstname: "John", lastname: "Scott", age: 17 },
+					{firstname: "James", lastname: "Blunt", age: 43 },
+					{firstname: "Amy", lastname: "Reiher", age: 37 },
+					{firstname: "Sergery", lastname: "Enin", age: 56 },
+					{firstname: "Eva", lastname: "Schulz", age: 32 },
+					{firstname: "Alicja", lastname: "Mrozek", age: 29 }
+				]
+
+	    		super(persons);
+		  	}
+		}
+
+		let gridExample = new GridExample();
+	</script>
+</body>
+</html>
